@@ -1,0 +1,10 @@
+.gradle/
+*.iml
+*.ipr
+*.iws
+build
+.idea
+.sonar
+.DS_Store
+out/
+logs/
