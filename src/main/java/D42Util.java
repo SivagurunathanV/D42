@@ -10,9 +10,7 @@ import com.amazonaws.services.s3.model.*;
 import com.amazonaws.util.IOUtils;
 import com.amazonaws.util.StringUtils;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.security.MessageDigest;
@@ -154,14 +152,26 @@ public class D42Util{
 	}
   }
 
-  public void uploadAsStream(InputStream inputStream, String fileName){
+  public S3Object uploadAsStream(InputStream inputStream, String fileName) throws IOException {
 
-//	  byte[] result = DigestUtils.md5(inputStream);
-//	  String streamMD5 = new String(Base64.encodeBase64(result));
-//	  ObjectMetadata meta = new ObjectMetadata();
-//	  meta.setContentLength(IOUtils.toByteArray(inputStream).length);
-//	  meta.setContentMD5(streamMD5);
-	PutObjectRequest request = new PutObjectRequest(bucketName,fileName,inputStream,new ObjectMetadata());
+//	inputStream.reset();
+	ByteArrayOutputStream baos = new ByteArrayOutputStream();
+	byte[] buffer = new byte[1024];
+	int len;
+	while ((len = inputStream.read(buffer)) != -1){
+	  baos.write(buffer,0,len);
+	}
+	baos.flush();
+	InputStream i1 = new ByteArrayInputStream(baos.toByteArray());
+	InputStream i2 = new ByteArrayInputStream(baos.toByteArray());
+	byte[] result = DigestUtils.md5(i1);
+	String streamMD5 = new String(Base64.encodeBase64(result));
+	ObjectMetadata meta = new ObjectMetadata();
+	meta.setContentLength(baos.size());
+	meta.setContentMD5(streamMD5);
+//	inputStream.reset();
+	PutObjectRequest request = new PutObjectRequest(bucketName,fileName,i2,meta);
 	amazonS3connection.putObject(request);
+	return amazonS3connection.getObject(bucketName,fileName);
   }
 }

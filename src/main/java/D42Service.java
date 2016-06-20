@@ -1,3 +1,4 @@
+import com.amazonaws.services.s3.model.S3Object;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.util.IOUtils;
 
@@ -15,7 +16,7 @@ import java.util.concurrent.Callable;
 public class D42Service {
 
   public static final String host = "10.47.2.2";
-  public static final D42Util d42Util = new D42Util(host, "code");
+  public static final D42Util d42Util = new D42Util(host, "code1");
   public static final int retryCount = 5;
   public static final int retryGap = 30;
 
@@ -80,18 +81,21 @@ public class D42Service {
 
   @POST
   @Path("/uploadAsStream")
-  public void uploadAsStream(){
+  public void uploadAsStream() throws Exception {
 	String path="/Users/sivagurunathan.v/D42Service/src/main/";
-	String fileName = "WriteSheet(2).xlsx";
-  	String file = "/Users/sivagurunathan.v/D42Service/src/main/WriteSheet (2).xlsx";
-//	StreamingOutput streamingOutput = output -> {
-//	  ExcelService.createFromTemplateUsingObject().write(output);
-//	};
-
+	String fileName = "WriteSheet.csv";
+//  	String file = "/Users/sivagurunathan.v/D42Service/src/main/WriteSheet (2).xlsx";
+//  	String file = "/Users/sivagurunathan.v/D42Service/src/main/test_excel.xlsx";
+  	String file = "/Users/sivagurunathan.v/D42Service/src/main/test_seller.csv";
 	try {
-	  InputStream input = new FileInputStream(file);
-	  d42Util.uploadAsStream(input,fileName);
-	  input.close();
+	  D42Util.executeWithRetries(new Callable<S3Object>(){
+		public S3Object call() throws IOException {
+		  InputStream input = new FileInputStream(file);
+		  S3Object uploadObject = d42Util.uploadAsStream(input,fileName);
+		  input.close();
+		  return uploadObject;
+		}
+	  },retryCount,retryGap);
 	} catch (FileNotFoundException e) {
 	  e.printStackTrace();
 	} catch (IOException e) {
