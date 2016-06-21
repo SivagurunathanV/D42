@@ -38,6 +38,7 @@ public class D42Util{
   private static final int WRITE_RATE_TO_D42 = 5;
   private final AmazonS3 amazonS3connection;
   private final String bucketName;
+  private static final String SUFFIX = "/";
 
   public D42Util(String hostIP,String bucketName) {
 	AWSCredentials awsCredentials = new BasicAWSCredentials(accessKey,secretKey);
@@ -155,6 +156,7 @@ public class D42Util{
   public S3Object uploadAsStream(InputStream inputStream, String fileName) throws IOException {
 
 //	inputStream.reset();
+	createBucket("dev");
 	ByteArrayOutputStream baos = new ByteArrayOutputStream();
 	byte[] buffer = new byte[1024];
 	int len;
@@ -170,8 +172,26 @@ public class D42Util{
 	meta.setContentLength(baos.size());
 	meta.setContentMD5(streamMD5);
 //	inputStream.reset();
-	PutObjectRequest request = new PutObjectRequest(bucketName,fileName,i2,meta);
+	String folderName = "FY_report";
+	createFolder(bucketName, folderName, amazonS3connection);
+	String file = folderName + SUFFIX + fileName;
+	PutObjectRequest request = new PutObjectRequest(bucketName , file,i2,meta);
+	//request.setRedirectLocation("/code1/Reports");
 	amazonS3connection.putObject(request);
-	return amazonS3connection.getObject(bucketName,fileName);
+	return amazonS3connection.getObject(bucketName,file);
   }
+
+  public static void createFolder(String bucketName, String folderName, AmazonS3 client) {
+	// create meta-data for your folder and set content-length to 0
+	ObjectMetadata metadata = new ObjectMetadata();
+	metadata.setContentLength(0);
+	// create empty content
+	InputStream emptyContent = new ByteArrayInputStream(new byte[0]);
+	// create a PutObjectRequest passing the folder name suffixed by /
+	PutObjectRequest putObjectRequest = new PutObjectRequest(bucketName,
+			folderName + SUFFIX, emptyContent, metadata);
+	// send request to S3 to create folder
+	client.putObject(putObjectRequest);
+  }
+
 }

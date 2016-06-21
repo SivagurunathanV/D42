@@ -16,7 +16,8 @@ import java.util.concurrent.Callable;
 public class D42Service {
 
   public static final String host = "10.47.2.2";
-  public static final D42Util d42Util = new D42Util(host, "code1");
+//  public static final D42Util d42Util = new D42Util(host, "code1");
+  public static final D42Util d42Util = new D42Util(host, "bucket");
   public static final int retryCount = 5;
   public static final int retryGap = 30;
 

@@ -2,7 +2,7 @@
 *.iml
 *.ipr
 *.iws
-build
+build/
 .idea
 .sonar
 .DS_Store
