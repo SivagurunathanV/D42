@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
 
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.Hex;
@@ -30,29 +31,31 @@ import javax.ws.rs.core.StreamingOutput;
  * Created by sivagurunathan.v on 15/06/16.
  */
 @Slf4j
-public class D42Util{
-  public static String fileName ="test.xlsx";
-  public static final String accessKey= "8C94T38VGBJQ9CB7X0FR";
-  public static final String secretKey= "6t7GEH3mKoiYH/RTeNQzXUi3lpbeiIo2tXYqNCru";
- // private static final int WRITE_RATE_TO_D42 = 128;
+@NoArgsConstructor
+public class D42Util {
+  public static String fileName = "test.xlsx";
+  //  public static final String accessKey= "8C94T38VGBJQ9CB7X0FR"; STAGE
+  public static final String accessKey = "O1J4TJ09L8Y8WDT9DSYV";
+  //  public static final String secretKey= "6t7GEH3mKoiYH/RTeNQzXUi3lpbeiIo2tXYqNCru"; STAGE
+  public static final String secretKey = "0DBzDv1Li+ZHB3q7pZVEtigZObF1cHFgKrRUtHF0";
+  // private static final int WRITE_RATE_TO_D42 = 128;
   private static final int WRITE_RATE_TO_D42 = 5;
-  private final AmazonS3 amazonS3connection;
-  private final String bucketName;
+  private AmazonS3 amazonS3connection;
+  private String bucketName;
   private static final String SUFFIX = "/";
 
-  public D42Util(String hostIP,String bucketName) {
-	AWSCredentials awsCredentials = new BasicAWSCredentials(accessKey,secretKey);
+  public D42Util(String hostIP, String bucketName) {
+	AWSCredentials awsCredentials = new BasicAWSCredentials(accessKey, secretKey);
 	ClientConfiguration clientConfiguration = new ClientConfiguration();
 	clientConfiguration.setProtocol(Protocol.HTTP);
-	amazonS3connection = new AmazonS3Client(awsCredentials,clientConfiguration);
+	amazonS3connection = new AmazonS3Client(awsCredentials, clientConfiguration);
 	amazonS3connection.setEndpoint(hostIP); //stage endPoint "10.47.2.2")
 	amazonS3connection.setS3ClientOptions(new S3ClientOptions().withPathStyleAccess(true));
 	this.bucketName = bucketName;
   }
 
 
-
-  public void getBucketsInfo(){
+  public void getBucketsInfo() {
 	List<Bucket> bucketList = amazonS3connection.listBuckets();
 	bucketList.stream().forEach(bucket -> {
 	  System.out.println(bucket.getName() + "\t" +
@@ -60,9 +63,9 @@ public class D42Util{
 	});
   }
 
-  public void createBucket(String bucketName){
-	if(amazonS3connection.doesBucketExist(bucketName)) {
-		amazonS3connection.createBucket(bucketName);
+  public void createBucket(String bucketName) {
+	if (amazonS3connection.doesBucketExist(bucketName)) {
+	  amazonS3connection.createBucket(bucketName);
 	}
   }
 
@@ -80,7 +83,7 @@ public class D42Util{
 	List<PartETag> partETags = new ArrayList<>();
 	File file = new File(filePath + fileName);
 	long contentLength = file.length();
-	log.info("Copying the "+fileName +" of size: "+contentLength/1024/1024 +" MB.");
+	log.info("Copying the " + fileName + " of size: " + contentLength / 1024 / 1024 + " MB.");
 	long partSize = WRITE_RATE_TO_D42 * 1024 * 1024; // Set part size to 5 MB.
 	try {
 
@@ -114,40 +117,40 @@ public class D42Util{
 	}
   }
 
-  public void getFile(String fileName,String path){
-	File file = new File(path+fileName);
-	file.setWritable(true,false);
-	amazonS3connection.getObject(new GetObjectRequest(bucketName,fileName),file);
+  public void getFile(String fileName, String path) {
+	File file = new File(path + fileName);
+	file.setWritable(true, false);
+	amazonS3connection.getObject(new GetObjectRequest(bucketName, fileName), file);
   }
 
-  public S3ObjectInputStream getDownloadableAsStream(String fileName){
-	S3Object s3Object = amazonS3connection.getObject(bucketName,fileName);
+  public S3ObjectInputStream getDownloadableAsStream(String fileName) {
+	S3Object s3Object = amazonS3connection.getObject(bucketName, fileName);
 	return s3Object.getObjectContent();
   }
 
-  public URL downloadAsURL(String fileName){
+  public URL downloadAsURL(String fileName) {
 
-	GeneratePresignedUrlRequest request = new GeneratePresignedUrlRequest("siva","test.xlsx");
+	GeneratePresignedUrlRequest request = new GeneratePresignedUrlRequest("siva", "test.xlsx");
 	return amazonS3connection.generatePresignedUrl(request);
   }
 
   public static <T> T executeWithRetries(Callable<T> operation, int maxRetires, int retryGapInMillis) throws Exception {
 
 	int retryCount = 0;
-	while(true) {
+	while (true) {
 	  try {
 		return operation.call();
 	  } catch (Exception ex) {
-		if(!(ex instanceof AmazonClientException) && !(ex instanceof SocketTimeoutException)) {
+		if (!(ex instanceof AmazonClientException) && !(ex instanceof SocketTimeoutException)) {
 		  throw ex;
 		}
 
 		++retryCount;
-		if(retryCount >= maxRetires) {
+		if (retryCount >= maxRetires) {
 		  throw ex;
 		}
 
-		Thread.sleep((long)retryGapInMillis);
+		Thread.sleep((long) retryGapInMillis);
 		log.error("[executeWithRetries] RetryCount : " + retryCount + "Failed with exception : " + ex);
 	  }
 	}
@@ -160,8 +163,8 @@ public class D42Util{
 	ByteArrayOutputStream baos = new ByteArrayOutputStream();
 	byte[] buffer = new byte[1024];
 	int len;
-	while ((len = inputStream.read(buffer)) != -1){
-	  baos.write(buffer,0,len);
+	while ((len = inputStream.read(buffer)) != -1) {
+	  baos.write(buffer, 0, len);
 	}
 	baos.flush();
 	InputStream i1 = new ByteArrayInputStream(baos.toByteArray());
@@ -172,13 +175,13 @@ public class D42Util{
 	meta.setContentLength(baos.size());
 	meta.setContentMD5(streamMD5);
 //	inputStream.reset();
-	String folderName = "FY_report";
-	createFolder(bucketName, folderName, amazonS3connection);
+	String folderName = "2015-16";
+	//createFolder(bucketName, folderName, amazonS3connection);
 	String file = folderName + SUFFIX + fileName;
-	PutObjectRequest request = new PutObjectRequest(bucketName , file,i2,meta);
+	PutObjectRequest request = new PutObjectRequest(bucketName, file, i2, meta);
 	//request.setRedirectLocation("/code1/Reports");
 	amazonS3connection.putObject(request);
-	return amazonS3connection.getObject(bucketName,file);
+	return amazonS3connection.getObject(bucketName, file);
   }
 
   public static void createFolder(String bucketName, String folderName, AmazonS3 client) {

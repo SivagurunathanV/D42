@@ -15,9 +15,10 @@ import java.util.concurrent.Callable;
 @Path("/settlements/d42")
 public class D42Service {
 
-  public static final String host = "10.47.2.2";
+//  public static final String host = "10.47.2.2"; // STAGE
+  public static final String host = "10.47.2.22";
 //  public static final D42Util d42Util = new D42Util(host, "code1");
-  public static final D42Util d42Util = new D42Util(host, "bucket");
+  public static final D42Util d42Util = new D42Util(host, "fy-reports");
   public static final int retryCount = 5;
   public static final int retryGap = 30;
 
@@ -84,7 +85,7 @@ public class D42Service {
   @Path("/uploadAsStream")
   public void uploadAsStream() throws Exception {
 	String path="/Users/sivagurunathan.v/D42Service/src/main/";
-	String fileName = "WriteSheet.csv";
+	String fileName = "fy_report_seller1.csv";
 //  	String file = "/Users/sivagurunathan.v/D42Service/src/main/WriteSheet (2).xlsx";
 //  	String file = "/Users/sivagurunathan.v/D42Service/src/main/test_excel.xlsx";
   	String file = "/Users/sivagurunathan.v/D42Service/src/main/test_seller.csv";

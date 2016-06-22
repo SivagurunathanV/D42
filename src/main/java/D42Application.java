@@ -21,7 +21,7 @@ public class D42Application extends Application<AppConfiguration> {
   @Override
   public void run(AppConfiguration configuration, Environment environment) throws Exception {
     D42Service d42Service = new D42Service();
-    D42Util d42Util = new D42Util("10.47.2.2","siva");
+    D42Util d42Util = new D42Util();
     logger.info("started");
     environment.jersey().register(d42Service);
     environment.jersey().register(d42Util);

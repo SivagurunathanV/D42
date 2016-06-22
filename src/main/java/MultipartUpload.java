@@ -24,8 +24,10 @@ public class MultipartUpload implements Callable {
 
   public static String fileName;
   public static String path;
-  public static final String accessKey= "8C94T38VGBJQ9CB7X0FR";
-  public static final String secretKey= "6t7GEH3mKoiYH/RTeNQzXUi3lpbeiIo2tXYqNCru";
+//  public static final String accessKey= "8C94T38VGBJQ9CB7X0FR"; STAGE
+  public static final String accessKey= "O1J4TJ09L8Y8WDT9DSYV";
+//  public static final String secretKey= "6t7GEH3mKoiYH/RTeNQzXUi3lpbeiIo2tXYqNCru"; STAGE
+  public static final String secretKey= "0DBzDv1Li+ZHB3q7pZVEtigZObF1cHFgKrRUtHF0";
   // private static final int WRITE_RATE_TO_D42 = 128;
   private static final int WRITE_RATE_TO_D42 = 5;
   private final AmazonS3 amazonS3connection;
