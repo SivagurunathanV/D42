@@ -7,6 +7,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 import java.io.*;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.concurrent.Callable;
 
 /**
@@ -16,7 +18,7 @@ import java.util.concurrent.Callable;
 public class D42Service {
 
 //  public static final String host = "10.47.2.2"; // STAGE
-  public static final String host = "10.47.2.22";
+  public static final String host = "10.47.2.2";
 //  public static final D42Util d42Util = new D42Util(host, "code1");
   public static final D42Util d42Util = new D42Util(host, "fy-reports");
   public static final int retryCount = 5;
@@ -85,15 +87,25 @@ public class D42Service {
   @Path("/uploadAsStream")
   public void uploadAsStream() throws Exception {
 	String path="/Users/sivagurunathan.v/D42Service/src/main/";
-	String fileName = "fy_report_seller1.csv";
+	String fileName = "fy_report_seller2.xlsx";
 //  	String file = "/Users/sivagurunathan.v/D42Service/src/main/WriteSheet (2).xlsx";
 //  	String file = "/Users/sivagurunathan.v/D42Service/src/main/test_excel.xlsx";
   	String file = "/Users/sivagurunathan.v/D42Service/src/main/test_seller.csv";
+	ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+	ExcelService service = new ExcelService();
+	Workbook workbook = service.createFromTemplateUsingObject();
+	StreamingOutput streamingOutput = output -> workbook.write(output);
+	streamingOutput.write(byteArrayOutputStream);
+//	workbook.write(byteArrayOutputStream);
+	byteArrayOutputStream.close();
+	byte[] bytes = byteArrayOutputStream.toByteArray();
+	InputStream byteArrayInputStream = new ByteArrayInputStream(bytes);
 	try {
 	  D42Util.executeWithRetries(new Callable<S3Object>(){
 		public S3Object call() throws IOException {
 		  InputStream input = new FileInputStream(file);
-		  S3Object uploadObject = d42Util.uploadAsStream(input,fileName);
+//		  S3Object uploadObject = d42Util.uploadAsStream(input,fileName);
+		  S3Object uploadObject = d42Util.uploadAsStreamByte(bytes,fileName);
 		  input.close();
 		  return uploadObject;
 		}
@@ -104,6 +116,15 @@ public class D42Service {
 	  e.printStackTrace();
 	}
 
+  }
+
+  @GET
+  @Path("/check")
+  public void checkObject() throws URISyntaxException {
+	String file = "test_seller.csv";
+	d42Util.checkObjectInS3("siva",file);
+	URL url = d42Util.downloadAsURL("siva",file);
+	System.out.println(url.toURI().toString());
   }
 
 

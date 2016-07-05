@@ -7,6 +7,7 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.S3ClientOptions;
 import com.amazonaws.services.s3.model.*;
+import com.amazonaws.services.sns.model.NotFoundException;
 import com.amazonaws.util.IOUtils;
 import com.amazonaws.util.StringUtils;
 
@@ -34,10 +35,10 @@ import javax.ws.rs.core.StreamingOutput;
 @NoArgsConstructor
 public class D42Util {
   public static String fileName = "test.xlsx";
-  //  public static final String accessKey= "8C94T38VGBJQ9CB7X0FR"; STAGE
-  public static final String accessKey = "O1J4TJ09L8Y8WDT9DSYV";
-  //  public static final String secretKey= "6t7GEH3mKoiYH/RTeNQzXUi3lpbeiIo2tXYqNCru"; STAGE
-  public static final String secretKey = "0DBzDv1Li+ZHB3q7pZVEtigZObF1cHFgKrRUtHF0";
+  public static final String accessKey = "8C94T38VGBJQ9CB7X0FR"; //STAGE
+  //public static final String accessKey = "O1J4TJ09L8Y8WDT9DSYV";
+  public static final String secretKey = "6t7GEH3mKoiYH/RTeNQzXUi3lpbeiIo2tXYqNCru"; //STAGE
+  //public static final String secretKey = "0DBzDv1Li+ZHB3q7pZVEtigZObF1cHFgKrRUtHF0";
   // private static final int WRITE_RATE_TO_D42 = 128;
   private static final int WRITE_RATE_TO_D42 = 5;
   private AmazonS3 amazonS3connection;
@@ -128,10 +129,30 @@ public class D42Util {
 	return s3Object.getObjectContent();
   }
 
-  public URL downloadAsURL(String fileName) {
+  public URL downloadAsURL(String bucketName, String fileName) {
 
-	GeneratePresignedUrlRequest request = new GeneratePresignedUrlRequest("siva", "test.xlsx");
+	GeneratePresignedUrlRequest request = new GeneratePresignedUrlRequest(bucketName, fileName);
 	return amazonS3connection.generatePresignedUrl(request);
+  }
+
+  public boolean checkObjectInS3(String bucketName, String fileName) {
+	ObjectMetadata objectMetadata;
+	try {
+	  objectMetadata = amazonS3connection.getObjectMetadata(bucketName, fileName);
+	} catch (AmazonS3Exception e) {
+	  if (e.getStatusCode() == 404)
+		return false;
+	  else
+		throw e;
+	}
+	if (objectMetadata != null && objectMetadata.getContentLength() != 0.0)
+	  return true;
+	else
+	  return false;
+  }
+
+  public void publicURL(String bucketName, String fileName) {
+	amazonS3connection.getBucketAcl(bucketName);
   }
 
   public static <T> T executeWithRetries(Callable<T> operation, int maxRetires, int retryGapInMillis) throws Exception {
@@ -159,7 +180,7 @@ public class D42Util {
   public S3Object uploadAsStream(InputStream inputStream, String fileName) throws IOException {
 
 //	inputStream.reset();
-	createBucket("dev");
+//	createBucket("dev");
 	ByteArrayOutputStream baos = new ByteArrayOutputStream();
 	byte[] buffer = new byte[1024];
 	int len;
@@ -195,6 +216,36 @@ public class D42Util {
 			folderName + SUFFIX, emptyContent, metadata);
 	// send request to S3 to create folder
 	client.putObject(putObjectRequest);
+  }
+
+
+  public S3Object uploadAsStreamByte(byte[] buffer, String fileName) throws IOException {
+
+//	inputStream.reset();
+//	createBucket("dev");
+//	ByteArrayOutputStream baos = new ByteArrayOutputStream();
+//
+//	int len;
+//	while ((len = inputStream.read(buffer)) != -1) {
+//	  baos.write(buffer, 0, len);
+//	}
+//	baos.flush();
+	InputStream i1 = new ByteArrayInputStream(buffer);
+	InputStream i2 = new ByteArrayInputStream(buffer);
+	byte[] result = DigestUtils.md5(i1);
+	String streamMD5 = new String(Base64.encodeBase64(result));
+	ObjectMetadata meta = new ObjectMetadata();
+	meta.setContentLength(buffer.length);
+	meta.setContentMD5(streamMD5);
+//	inputStream.reset();
+	String folderName = "2015-16";
+
+	//createFolder(bucketName, folderName, amazonS3connection);
+	String file = folderName + SUFFIX + fileName;
+	PutObjectRequest request = new PutObjectRequest(bucketName, file, i2, meta);
+	//request.setRedirectLocation("/code1/Reports");
+	amazonS3connection.putObject(request);
+	return amazonS3connection.getObject(bucketName, file);
   }
 
 }
