@@ -151,6 +151,11 @@ public class D42Util {
 	  return false;
   }
 
+  public S3Object getObjectFromS3(String bucketName,String fileName){
+	boolean existsOrNot = checkObjectInS3(bucketName,fileName);
+	return amazonS3connection.getObject(bucketName,fileName);
+  }
+
   public void publicURL(String bucketName, String fileName) {
 	amazonS3connection.getBucketAcl(bucketName);
   }
